@@ -1,0 +1,60 @@
+@startuml MiniJobQueue_Architecture
+
+autonumber
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor "User / OS" as OS
+participant "Program (Main)" as Main
+participant "JobQueue" as Queue
+participant "WorkerPool\n(Worker #1)" as W1
+participant "WorkerPool\n(Worker #2)" as W2
+participant "Job" as Job
+
+== 1. Job Enqueuing (Producer) ==
+activate Main
+loop 100 times
+    Main -> Queue : EnqueueAsync(job, ct)
+    note right: Zero-allocation ValueTask\n(unbounded channel write)
+    Queue --> Main : complete
+end
+Main -> Queue : Complete()
+note right: Signals no more jobs will be added
+
+== 2. Concurrent Worker Execution ==
+Main -> W1 ** : RunWorkerAsync(id: 1, queue, ct)
+activate W1
+Main -> W2 ** : RunWorkerAsync(id: 2, queue, ct)
+activate W2
+
+par Worker Processing Loop
+    W1 -> Queue : ReadAllAsync(ct)
+    Queue --> W1 : job #1
+    W1 -> Job : ExecuteAsync(workerId: 1, ct)
+    activate Job
+    Job --> W1 : completed
+    deactivate Job
+else
+    W2 -> Queue : ReadAllAsync(ct)
+    Queue --> W2 : job #2 (Failing Job)
+    W2 -> Job : ExecuteAsync(workerId: 2, ct)
+    activate Job
+    Job --x W2 : throws InvalidOperationException
+    deactivate Job
+    note over W2: Inner try/catch logs error\nand keeps worker loop alive!
+end
+
+== 3. Graceful Cancellation (Ctrl+C) ==
+OS -> Main : Console.CancelKeyPress (SIGINT)
+note over Main: eventArgs.Cancel = true\ncts.Cancel()
+Main -> W1 : CancellationToken triggered
+W1 -> W1 : Catch OperationCanceledException & exit loop
+deactivate W1
+Main -> W2 : CancellationToken triggered
+W2 -> W2 : Catch OperationCanceledException & exit loop
+deactivate W2
+
+Main -> OS : Log Total RunTime & Exit
+deactivate Main
+
+@enduml
