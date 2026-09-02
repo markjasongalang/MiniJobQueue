@@ -41,9 +41,7 @@ MiniJobQueue/
 
 ## Architecture Sequence Diagram
 
-## Architecture Sequence Diagram
-
-![MiniJobQueue Architecture](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/markjasongalang/MiniJobQueue/main/docs/architecture.puml)
+![MiniJobQueue Architecture](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/markjasongalang/MiniJobQueue/master/docs/architecture.puml&fmt=svg)
 
 ## How It Works
 
