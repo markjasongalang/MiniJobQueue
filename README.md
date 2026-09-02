@@ -1,5 +1,7 @@
 # MiniJobQueue
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A minimal, zero-dependency, in-memory job queue built with C# and .NET 10. Demonstrates the **Producer-Consumer** pattern using `System.Threading.Channels` and async streams.
 
 ## Features
